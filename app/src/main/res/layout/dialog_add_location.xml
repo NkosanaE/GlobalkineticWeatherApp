@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/white"
+    android:paddingLeft="20dp"
+    android:paddingTop="20dp"
+    android:paddingRight="20dp"
+    android:paddingBottom="5dp"
+    android:weightSum="1">
+
+    <LinearLayout
+        android:id="@+id/lyt_form"
+        android:layout_width="match_parent"
+        android:layout_height="130dp"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:gravity="bottom"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tv_message"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
+                android:text="-" />
+
+            <AutoCompleteTextView
+                android:id="@+id/address"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:background="@color/grey_bg"
+                android:ems="10"
+                android:hint="Type City name"
+                android:imeOptions="actionDone"
+                android:lines="1"
+                android:maxLines="1"
+                android:padding="10dp"
+                android:singleLine="true">
+
+            </AutoCompleteTextView>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:gravity="right|center_vertical">
+
+            <Button
+                android:id="@+id/button_no"
+                android:layout_width="100dp"
+                android:layout_height="wrap_content"
+                android:background="@drawable/layout_click"
+                android:text="CANCEL"
+                android:textColor="@color/black" />
+
+            <Button
+                android:id="@+id/button_yes"
+                android:layout_width="100dp"
+                android:layout_height="wrap_content"
+                android:background="@drawable/layout_click"
+                android:text="ADD"
+                android:textColor="@color/black" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/lyt_progress"
+        android:layout_width="match_parent"
+        android:layout_height="130dp"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <ProgressBar
+            android:id="@+id/progressBar1"
+            style="?android:attr/progressBarStyleLarge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:id="@+id/textView1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Loading data" />
+
+    </LinearLayout>
+
+</RelativeLayout>
