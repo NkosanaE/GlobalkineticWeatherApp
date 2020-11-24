@@ -30,4 +30,7 @@
     <!-- Sandton -->
     <string name="default_city_code">993800</string>
 
+    <string name="permission_notice">This permission is important but you can as well set your location on Location page</string>
+    <string name="no_location_notice">We could not get your location, please swipe down to refresh</string>
+
 </resources>

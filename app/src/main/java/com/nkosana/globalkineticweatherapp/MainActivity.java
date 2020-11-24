@@ -1,10 +1,19 @@
 package com.nkosana.globalkineticweatherapp;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import android.Manifest;
 import android.app.Dialog;
+import android.app.Service;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -45,7 +54,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-public class MainActivity extends SlidingActivity {
+public class MainActivity extends SlidingActivity implements LocationListener {
     private TextView tv_addres, tv_date, tv_temp,
             tv_pressure, tv_humidity, tv_wind,
             tv_sunset, tv_sunrise, tv_description;
@@ -71,7 +80,9 @@ public class MainActivity extends SlidingActivity {
 
     private static final int REQUEST_LOCATION = 1;
     LocationManager locationManager;
+    private Location location;
     String latitude, longitude;
+
 
     SwipeRefreshLayout mSwipeRefreshLayout;
 
@@ -84,6 +95,11 @@ public class MainActivity extends SlidingActivity {
 
         setBehindContentView(R.layout.menu_location);
         getSlidingMenu().setBehindOffset(100);
+
+        locationManager = (LocationManager) getSystemService(Service.LOCATION_SERVICE);
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_LOCATION);
+        }
 
         Utils.setUpdateWidget(getApplicationContext());
 
@@ -130,13 +146,79 @@ public class MainActivity extends SlidingActivity {
                 tv_day_3.setText(global.getDay(f.list.get(2).dt));
                 tv_day_4.setText(global.getDay(f.list.get(3).dt));
                 tv_day_5.setText(global.getDay(f.list.get(4).dt));
-            }else{
-                new LoadJson().execute("");
             }
         } catch (Exception e) {
             Toast.makeText(getApplicationContext(), "Failed read data", Toast.LENGTH_SHORT).show();
         }
 
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+        this.location = location;
+
+        new LoadJson().execute(String.valueOf(location.getLatitude()),String.valueOf(location.getLongitude()));
+    }
+
+    @Override
+    public void onStatusChanged(String s, int i, Bundle bundle) {
+
+    }
+
+    @Override
+    public void onProviderEnabled(String s) {
+
+    }
+
+    @Override
+    public void onProviderDisabled(String provider) {
+        if (provider.equals(LocationManager.GPS_PROVIDER)) {
+            showGPSDisabledAlertToUser();
+        }
+    }
+
+
+    private void showGPSDisabledAlertToUser() {
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+        alertDialogBuilder.setMessage("GPS is disabled in your device. Would you like to enable it?")
+                .setCancelable(false)
+                .setPositiveButton("Goto Settings Page To Enable GPS", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        Intent callGPSSettingIntent = new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                        startActivity(callGPSSettingIntent);
+                    }
+                });
+        alertDialogBuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                dialog.cancel();
+            }
+        });
+        AlertDialog alert = alertDialogBuilder.create();
+        alert.show();
+    }
+
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode == REQUEST_LOCATION) {
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
+                if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                    //make api call
+                    locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 100, 2, this);
+                    if (locationManager != null) {
+                        location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+                        if (location!=null) {
+                           // apiUrl = AppController.getBaseUrl()+"lat="+location.getLatitude()+"&lon="+location.getLongitude()+"&"+AppController.getAppID()+"&"+AppController.getUnit();
+                            new LoadJson().execute(String.valueOf(location.getLatitude()),String.valueOf(location.getLongitude()));
+                        }
+                    }else{
+                        new LoadJson().execute("");
+                    }
+                }
+            }else{
+                Toast.makeText(MainActivity.this, getString(R.string.permission_notice), Toast.LENGTH_LONG).show();
+            }
+        }
     }
 
     public class LoadJson extends AsyncTask<String, String, String> {
@@ -156,13 +238,25 @@ public class MainActivity extends SlidingActivity {
         @Override
         protected String doInBackground(String... params) {
             try {
+
+                String url_weather;
+                String url_forecast;
+                if (params.length ==2){
+                    String lat = params[0];
+                    String lon = params[1];
+                     url_weather = Constant.getURLweatherLatLong(lat,lon);
+                     url_forecast = Constant.getURLforecastLatLong(lat,lon);
+                }else{
+                     url_weather = Constant.getURLweather(global.getStringPref(Constant.S_KEY_CURRENT_ID, global.getDefaultCity()));
+                    url_forecast = Constant.getURLforecast(global.getStringPref(Constant.S_KEY_CURRENT_ID, global.getDefaultCity()));
+                }
+
                 isOnexecute = true;
                 Thread.sleep(50);
                 if (cd.isConnectingToInternet()) {
                     List<NameValuePair> param = new ArrayList<NameValuePair>();
 
-                    String url_weather = Constant.getURLweather(global.getStringPref(Constant.S_KEY_CURRENT_ID, global.getDefaultCity()));
-                    String url_forecast = Constant.getURLforecast(global.getStringPref(Constant.S_KEY_CURRENT_ID, global.getDefaultCity()));
+
 
                     JSONObject json_weather = jsonParser.makeHttpRequest(url_weather, "POST", param);
                     JSONObject json_forecast = jsonParser.makeHttpRequest(url_forecast, "POST", param);
@@ -265,7 +359,11 @@ public class MainActivity extends SlidingActivity {
             @Override
             public void onRefresh() {
                 if (!isOnexecute) {
-                    new LoadJson().execute("");
+                    if (location==null) {
+                        new LoadJson().execute("");
+                    }else {
+                        new LoadJson().execute(String.valueOf(location.getLatitude()),String.valueOf(location.getLongitude()));
+                    }
                 } else {
                     Toast.makeText(getApplicationContext(), "Current task still running", Toast.LENGTH_SHORT).show();
                 }
@@ -345,9 +443,14 @@ public class MainActivity extends SlidingActivity {
             WeatherResponse weather = gson.fromJson(itemloc.getJsonWeather(), WeatherResponse.class);
             ForecastResponse forecast = gson.fromJson(itemloc.getJsonForecast(), ForecastResponse.class);
             displayData(weather, forecast);
-        } else {
-            new LoadJson().execute("");
         }
+//        else {
+//            if (location==null) {
+//                new LoadJson().execute("");
+//            }else {
+//                new LoadJson().execute(String.valueOf(location.getLatitude()),String.valueOf(location.getLongitude()));
+//            }
+//        }
     }
 
     public void refreshList() {
