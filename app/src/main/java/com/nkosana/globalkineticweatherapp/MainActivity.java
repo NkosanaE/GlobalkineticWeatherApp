@@ -204,7 +204,7 @@ public class MainActivity extends SlidingActivity implements LocationListener {
             if (grantResults[0] == PackageManager.PERMISSION_GRANTED && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
                 if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
                     //make api call
-                    locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 100, 2, this);
+                   // locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 100, 2, this);
                     if (locationManager != null) {
                         location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
                         if (location!=null) {
@@ -359,11 +359,24 @@ public class MainActivity extends SlidingActivity implements LocationListener {
             @Override
             public void onRefresh() {
                 if (!isOnexecute) {
-                    if (location==null) {
-                        new LoadJson().execute("");
-                    }else {
-                        new LoadJson().execute(String.valueOf(location.getLatitude()),String.valueOf(location.getLongitude()));
+
+                    if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                        //make api call
+                        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 100, 2, MainActivity.this);
+                        if (locationManager != null) {
+                            location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+                            if (location==null) {
+                                new LoadJson().execute("");
+                                // apiUrl = AppController.getBaseUrl()+"lat="+location.getLatitude()+"&lon="+location.getLongitude()+"&"+AppController.getAppID()+"&"+AppController.getUnit();
+                                //new LoadJson().execute(String.valueOf(location.getLatitude()),String.valueOf(location.getLongitude()));
+                            }
+                        }
                     }
+//                    if (location==null) {
+//                        new LoadJson().execute("");
+//                    }else {
+//                        new LoadJson().execute(String.valueOf(location.getLatitude()),String.valueOf(location.getLongitude()));
+//                    }
                 } else {
                     Toast.makeText(getApplicationContext(), "Current task still running", Toast.LENGTH_SHORT).show();
                 }
